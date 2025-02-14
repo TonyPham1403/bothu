@@ -125,24 +125,43 @@
         }
 
         .history-menu {
-            position: absolute;
-            /* Đặt vị trí tuyệt đối dựa vào nút menu */
-            top: 100%;
-            /* Đặt ngay bên dưới nút 3 gạch */
-            right: 0;
-            /* Căn lề phải theo nút 3 gạch */
+            position: fixed;
+            bottom: 60px;
+            /* Nằm ngay trên .fixed-bottom */
+            left: 50%;
+            transform: translateX(-50%);
             background: white;
             border: 1px solid #ccc;
             border-radius: 5px;
             padding: 10px;
             display: none;
-            max-height: 300px;
-            width: 250px;
-            /* Điều chỉnh độ rộng theo ý bạn */
+            max-height: 200px;
+            width: 350px;
+            /* Tăng chiều rộng để chứa 2 cột */
             overflow-y: auto;
             box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
-            z-index: 9999;
-            /* Đảm bảo nằm trên bảng điểm */
+            z-index: 1000;
+        }
+
+        .history-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            /* 2 cột */
+            gap: 5px;
+            /* Khoảng cách giữa các ô */
+        }
+
+        .history-item {
+            background: #f8f8f8;
+            padding: 8px;
+            border-radius: 3px;
+            text-align: center;
+            border: 1px solid #ddd;
+            cursor: pointer;
+        }
+
+        .history-item:hover {
+            background: #e0e0e0;
         }
 
 
@@ -157,7 +176,7 @@
             /* Khoảng cách đều giữa nội dung */
             min-width: 120px;
             /* Đảm bảo đủ rộng */
-            height: 25px;
+            height: 22px;
             /* Đặt chiều cao cố định */
             white-space: nowrap;
             /* Ngăn nội dung xuống hàng */
@@ -166,7 +185,6 @@
             overflow: hidden;
             /* Ngăn chặn vỡ layout */
         }
-
 
 
 
@@ -220,15 +238,21 @@
         .fixed-bottom {
             position: fixed;
             bottom: 0;
-            left: 0;
-            width: 100%;
+            left: 50%;
+            /* Đẩy phần tử về giữa */
+            transform: translateX(-50%);
+            /* Căn giữa chính xác */
+            width: auto;
+            /* Không chiếm toàn bộ màn hình */
             background: white;
-            /* Để nền trắng, tránh bị che */
-            padding: 10px 0;
+            padding: 10px 20px;
             text-align: center;
-            /* Căn giữa nút */
             box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
-            /* Tạo hiệu ứng nổi lên */
+            display: flex;
+            flex-direction: column;
+            /* Căn các phần tử theo chiều dọc */
+            align-items: center;
+            /* Căn giữa nội dung */
         }
     </style>
 </head>
@@ -236,14 +260,13 @@
 <body>
     <button id="mode1Btn">Number to Radical</button>
     <button id="mode2Btn">Radical to Number</button>
+    <div style="position: fixed; top: 10px; right: 10px;">
+        <button id="menuButton">☰</button>
+        <div class="history-menu" id="historyMenu"></div>
+    </div>
 
-    <!-- <h1>Trắc nghiệm Bộ Thủ</h1> -->
-    <!-- <button id="startBtn">Start</button> -->
     <div class="fixed-bottom">
-        <div style="position: fixed; top: 10px; right: 10px;">
-            <button id="menuButton">☰</button>
-            <div class="history-menu" id="historyMenu"></div>
-        </div>
+
 
         <div id="quizContainer" class="quiz-container" style="display: none;">
             <div class="question" id="question"></div>
@@ -531,7 +554,10 @@
 
         function updateHistoryMenu() {
             let menu = document.getElementById("historyMenu");
-            menu.innerHTML = ""; // Xóa nội dung cũ để cập nhật
+            menu.innerHTML = ""; // Xóa nội dung cũ
+
+            let grid = document.createElement("div");
+            grid.className = "history-grid";
 
             history.forEach((entry, index) => {
                 let item = document.createElement("div");
@@ -539,22 +565,27 @@
                 item.innerText = `Câu ${index + 1}: Bộ ${entry.question.bo_thu}`;
 
                 if (!entry.correct && entry.firstAttempt) {
-                    entry.markWrongFirstAttempt = true; // Đánh dấu là đã chọn sai lần đầu
+                    entry.markWrongFirstAttempt = true;
                 }
 
-                // Kiểm tra xem có phải lần đầu chọn sai không
                 if (entry.markWrongFirstAttempt) {
-                    item.classList.add("wrong-first-attempt"); // Giữ trạng thái màu đỏ
+                    item.style.background = "#ff0000"; // Màu đỏ tươi khi sai lần đầu
+                    item.style.color = "white"; // Chữ màu trắng
                 }
 
                 item.onclick = () => {
                     currentIndex = index;
                     loadQuestion(index);
+                    // Không đóng menu khi chọn
                 };
 
-                menu.appendChild(item);
+                grid.appendChild(item);
             });
+
+            menu.appendChild(grid);
         }
+
+
         document.getElementById("menuButton").addEventListener("click", function () {
             let menu = document.getElementById("historyMenu");
             let menuButton = document.getElementById("menuButton");
