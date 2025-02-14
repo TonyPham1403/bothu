@@ -124,8 +124,6 @@
             }
         }
 
-
-
         .history-menu {
             position: absolute;
             top: 50px;
@@ -143,7 +141,6 @@
             z-index: 1000;
             /* Đảm bảo hiển thị trên các phần khác */
         }
-
 
         .history-item {
             padding: 8px;
@@ -167,20 +164,47 @@
             border-radius: 5px;
             box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
         }
+
+        #mode1Btn,
+        #mode2Btn {
+            padding: 12px 25px;
+            font-size: 20px;
+            cursor: pointer;
+            margin: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: 0.3s ease;
+        }
+
+        #mode1Btn:hover,
+        #mode2Btn:hover {
+            background: #0056b3;
+        }
+
+        .history-item.wrong-first-attempt {
+            background-color: red;
+            color: white;
+            font-weight: bold;
+        }
     </style>
 </head>
 
 <body>
+    <button id="mode1Btn">Chế độ 1</button>
+    <button id="mode2Btn">Chế độ 2</button>
 
     <!-- <h1>Trắc nghiệm Bộ Thủ</h1> -->
-    <button id="startBtn">Start</button>
+    <!-- <button id="startBtn">Start</button> -->
 
     <div style="position: fixed; top: 10px; right: 10px;">
         <button id="menuButton">☰</button>
         <div class="history-menu" id="historyMenu"></div>
     </div>
-
-
+    <div id="scoreContainer" style="font-size: 20px; font-weight: bold; margin-bottom: 10px;">
+        Điểm: <span id="score">0</span>
+    </div>
 
     <div id="quizContainer" class="quiz-container" style="display: none;">
         <div class="question" id="question"></div>
@@ -197,6 +221,8 @@
         let bothuData = [];
         let history = [];
         let currentIndex = -1;
+        let mode = 1; // Mặc định là chế độ 1
+        let score = 0; // Thêm biến để lưu điểm
 
         async function loadBothuData() {
             const response = await fetch("bothu.json");
@@ -208,105 +234,112 @@
         }
 
         function generateOptions(correctAnswer) {
-            let options = [{ bo_thu: correctAnswer.bo_thu, phien_am: correctAnswer.phien_am }];
+            let options = [];
 
-            while (options.length < 4) {
-                let randomOption = bothuData[Math.floor(Math.random() * bothuData.length)];
-                let newOption = { bo_thu: randomOption.bo_thu, phien_am: randomOption.phien_am };
+            if (mode === 1) {
+                // Chế độ 1: Chọn bộ thủ từ số thứ tự
+                options.push({ bo_thu: correctAnswer.bo_thu, phien_am: correctAnswer.phien_am, stt: correctAnswer.stt });
+                while (options.length < 4) {
+                    let randomOption = bothuData[Math.floor(Math.random() * bothuData.length)];
+                    let newOption = { bo_thu: randomOption.bo_thu, phien_am: randomOption.phien_am, stt: randomOption.stt };
 
-                if (!options.some(opt => opt.bo_thu === newOption.bo_thu)) {
-                    options.push(newOption);
+                    if (!options.some(opt => opt.bo_thu === newOption.bo_thu)) {
+                        options.push(newOption);
+                    }
+                }
+            } else {
+                // Chế độ 2: Chọn số thứ tự từ bộ thủ
+                options.push({ stt: correctAnswer.stt });
+                while (options.length < 4) {
+                    let randomOption = bothuData[Math.floor(Math.random() * bothuData.length)];
+                    let newOption = { stt: randomOption.stt };
+
+                    if (!options.some(opt => opt.stt === newOption.stt)) {
+                        options.push(newOption);
+                    }
                 }
             }
 
             return options.sort(() => Math.random() - 0.5);
         }
 
-        function loadQuestion(index = null) {
-            let questionData;
-            if (index !== null) {
-                questionData = history[index];
-            } else {
-                questionData = {
-                    question: getRandomQuestion(),
-                    options: [],
-                    selected: null,
-                    correct: false
-                };
-                questionData.options = generateOptions(questionData.question);
-                history.push(questionData);
-                currentIndex++;
+
+
+
+
+
+
+
+
+
+        // Hiển thị điểm số
+        function updateScoreDisplay() {
+            let scoreElement = document.getElementById("scoreDisplay");
+            if (!scoreElement) {
+                scoreElement = document.createElement("div");
+                scoreElement.id = "scoreDisplay";
+                scoreElement.style.position = "fixed";
+                scoreElement.style.top = "10px";
+                scoreElement.style.left = "50%";
+                scoreElement.style.transform = "translateX(-50%)";
+                scoreElement.style.background = "#fff";
+                scoreElement.style.padding = "10px";
+                scoreElement.style.border = "1px solid #000";
+                scoreElement.style.fontSize = "20px";
+                document.body.appendChild(scoreElement);
             }
 
-            document.getElementById("question").innerText = `${questionData.question.stt}`;
-            let optionsContainer = document.getElementById("options");
-            optionsContainer.innerHTML = "";
+            // Đếm số câu đã trả lời ít nhất 1 lần
+            let totalAnswered = history.filter(q => q.firstAttempt !== undefined).length;
 
-            questionData.options.forEach(option => {
-                let button = document.createElement("button");
-                button.className = "option";
+            // Hiển thị dạng Điểm: X/Y
+            scoreElement.innerText = `Điểm: ${score}/${totalAnswered}`;
+        }
 
-                let boThuSpan = document.createElement("span");
-                boThuSpan.className = "bo-thu";
-                boThuSpan.innerText = option.bo_thu;
 
-                let phienAmSpan = document.createElement("span");
-                phienAmSpan.className = "phien-am";
-                phienAmSpan.innerText = option.phien_am;
 
-                button.appendChild(boThuSpan);
-                button.appendChild(phienAmSpan);
-                optionsContainer.appendChild(button);
 
-                // Kiểm tra nếu câu hỏi đã được trả lời trước đó
-                if (index !== null && questionData.selected !== null) {
-                    if (questionData.question.bo_thu === option.bo_thu) {
-                        button.classList.add("correct"); // Tô xanh câu đúng
-                    } else if (option.bo_thu === questionData.selected) {
-                        button.classList.add("wrong"); // Tô đỏ câu sai
-                    }
-                    button.onclick = null; // Không cho chọn lại
-                } else {
-                    button.onclick = () => checkAnswer(button, option.bo_thu);
-                }
+
+
+
+        // Hàm vô hiệu hóa tất cả các nút lựa chọn
+        function disableAllOptions() {
+            let buttons = document.querySelectorAll(".answer-button");
+            buttons.forEach(button => {
+                button.disabled = true; // Không thể click nữa
+                button.onclick = null; // Xóa sự kiện click để tránh bug
             });
-
-            // Hiển thị phần giải thích nếu câu hỏi đã được trả lời
-            if (questionData.selected !== null) {
-                document.getElementById("explanation").innerText = `${questionData.question.y_nghia}`;
-            } else {
-                document.getElementById("explanation").innerText = ""; // Xóa phần giải thích nếu là câu mới
-            }
-
-            document.getElementById("prevBtn").disabled = currentIndex <= 0;
-            document.getElementById("nextBtn").disabled = currentIndex >= history.length - 1;
         }
 
-
-
-
-
-        function checkAnswer(selectedButton, selectedBoThu) {
-            let questionData = history[currentIndex];
-            questionData.selected = selectedBoThu;
-            questionData.correct = (selectedBoThu === questionData.question.bo_thu);
-
-            selectedButton.classList.add(questionData.correct ? "correct" : "wrong");
-            selectedButton.onclick = null;
-
-            if (questionData.correct) {
-                document.getElementById("explanation").innerText = `${questionData.question.y_nghia}`;
-                setTimeout(() => loadQuestion(), 1000);
-            }
-
+        // Hàm kích hoạt lại nút khi chuyển câu hỏi mới
+        function enableAllOptions() {
+            let buttons = document.querySelectorAll(".answer-button");
+            buttons.forEach(button => {
+                button.disabled = false; // Bật lại
+                button.onclick = (event) => {
+                    checkAnswer(event.target, event.target.value);
+                };
+                button.classList.remove("correct", "wrong"); // Xóa màu đã chọn trước đó
+            });
         }
 
-        document.getElementById("startBtn").addEventListener("click", async () => {
+        document.getElementById("mode1Btn").addEventListener("click", async () => {
+            mode = 1;
+            startQuiz();
+        });
+
+        document.getElementById("mode2Btn").addEventListener("click", async () => {
+            mode = 2;
+            startQuiz();
+        });
+
+        async function startQuiz() {
             await loadBothuData();
-            document.getElementById("startBtn").style.display = "none";
+            document.getElementById("mode1Btn").style.display = "none";
+            document.getElementById("mode2Btn").style.display = "none";
             document.getElementById("quizContainer").style.display = "block";
             loadQuestion();
-        });
+        }
 
         document.getElementById("prevBtn").addEventListener("click", () => {
             if (currentIndex > 0) {
@@ -322,30 +355,168 @@
             }
         });
 
-
-
         document.getElementById("menuButton").addEventListener("click", () => {
             let menu = document.getElementById("historyMenu");
             menu.style.display = (menu.style.display === "block") ? "none" : "block";
-            updateHistoryMenu();  // Cập nhật danh sách lịch sử
+            // updateHistoryMenu();  // Cập nhật danh sách lịch sử
         });
+
+
+
+
+
+        function loadQuestion(index = null) {
+            let questionData;
+            if (index !== null) {
+                questionData = history[index];
+            } else {
+                questionData = {
+                    question: getRandomQuestion(),
+                    options: [],
+                    selected: null,
+                    correct: false,
+                    explanation: "" // Lưu phần giải thích để hiển thị lại sau
+                };
+                questionData.options = generateOptions(questionData.question);
+                history.push(questionData);
+                currentIndex++;
+            }
+
+            let optionsContainer = document.getElementById("options");
+            optionsContainer.innerHTML = "";
+
+            if (mode === 1) {
+                document.getElementById("question").innerText = `${questionData.question.stt}`;
+            } else {
+                document.getElementById("question").innerText = questionData.question.bo_thu;
+            }
+
+            // Hiển thị lại giải thích nếu câu đó đã từng chọn đúng trước đó
+            document.getElementById("explanation").innerText = questionData.correct ? questionData.explanation : "";
+
+            questionData.options.forEach(option => {
+                let button = document.createElement("button");
+                button.className = "option";
+
+                if (mode === 1) {
+                    let boThuSpan = document.createElement("span");
+                    boThuSpan.className = "bo-thu";
+                    boThuSpan.innerText = option.bo_thu;
+
+                    let phienAmSpan = document.createElement("span");
+                    phienAmSpan.className = "phien-am";
+                    phienAmSpan.innerText = option.phien_am;
+
+                    button.appendChild(boThuSpan);
+                    button.appendChild(phienAmSpan);
+                } else {
+                    button.innerText = option.stt;
+                }
+
+                optionsContainer.appendChild(button);
+
+                if (index !== null && questionData.selected !== null) {
+                    if ((mode === 1 && questionData.question.bo_thu === option.bo_thu) ||
+                        (mode === 2 && questionData.question.stt === option.stt)) {
+                        button.classList.add("correct");
+                    } else if (option.bo_thu === questionData.selected || option.stt === questionData.selected) {
+                        button.classList.add("wrong");
+                        // updateHistoryMenu();  // Cập nhật danh sách lịch sử
+
+                    }
+                    button.onclick = null;
+                } else {
+                    button.onclick = () => checkAnswer(button, mode === 1 ? option.bo_thu : option.stt);
+                }
+            });
+
+            document.getElementById("prevBtn").disabled = currentIndex <= 0;
+            document.getElementById("nextBtn").disabled = currentIndex >= history.length - 1;
+        }
+
+
+        function checkAnswer(selectedButton, selectedValue) {
+            let questionData = history[currentIndex];
+
+            // Nếu đã chọn đúng trước đó, không xử lý tiếp
+            if (questionData.correct) return;
+
+            // Kiểm tra đáp án đúng
+            let isCorrect = (mode === 1) ? (selectedValue === questionData.question.bo_thu)
+                : (selectedValue === questionData.question.stt);
+
+            // Lưu trạng thái đã chọn
+            questionData.selected = selectedValue;
+
+            // Nếu là lần đầu tiên chọn, kiểm tra và cập nhật điểm số
+            if (questionData.firstAttempt === undefined) {
+                questionData.firstAttempt = true; // Đánh dấu đã chọn ít nhất một lần
+                if (isCorrect) {
+                    score++; // Chỉ tăng điểm nếu chọn đúng ngay lần đầu tiên
+                }
+            } else {
+                questionData.firstAttempt = false; // Nếu đã chọn sai trước đó, không tính điểm
+            }
+
+            questionData.correct = isCorrect;
+
+            // Tô màu nút vừa chọn
+            if (isCorrect) {
+                selectedButton.classList.add("correct");
+
+                // Vô hiệu hóa tất cả nút khác
+                document.querySelectorAll(".option").forEach(btn => {
+                    btn.disabled = true;
+                    let value = (mode === 1) ? btn.innerText : btn.innerText;
+                    if (value === questionData.question.bo_thu || value == questionData.question.stt) {
+                        btn.classList.add("correct"); // Đáp án đúng
+                    }
+                });
+
+                // Cập nhật điểm số
+                updateScoreDisplay();
+
+                // Chuyển sang câu tiếp theo sau 1 giây
+                setTimeout(() => {
+                    loadQuestion();
+                }, 1000);
+            } else {
+                // Nếu sai, tô màu đỏ nhưng không khóa nút
+                selectedButton.classList.add("wrong");
+            }
+
+            updateHistoryMenu();
+        }
 
         function updateHistoryMenu() {
             let menu = document.getElementById("historyMenu");
-            menu.innerHTML = "";  // Xóa nội dung cũ
+            menu.innerHTML = ""; // Xóa nội dung cũ để cập nhật
 
             history.forEach((entry, index) => {
                 let item = document.createElement("div");
                 item.className = "history-item";
                 item.innerText = `Câu ${index + 1}: Bộ ${entry.question.bo_thu}`;
+
+                if (!entry.correct && entry.firstAttempt) {
+                    entry.markWrongFirstAttempt = true; // Đánh dấu là đã chọn sai lần đầu
+                }
+
+                // Kiểm tra xem có phải lần đầu chọn sai không
+                if (entry.markWrongFirstAttempt) {
+                    item.classList.add("wrong-first-attempt"); // Giữ trạng thái màu đỏ
+                }
+
                 item.onclick = () => {
                     currentIndex = index;
                     loadQuestion(index);
                     document.getElementById("historyMenu").style.display = "none"; // Đóng menu sau khi chọn
                 };
+
                 menu.appendChild(item);
             });
         }
+
+
 
     </script>
 
