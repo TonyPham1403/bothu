@@ -125,27 +125,49 @@
         }
 
         .history-menu {
-            position: fixed;
-            /* Chuyển từ absolute sang fixed để đảm bảo luôn hiển thị trên cùng */
-            top: 50px;
-            right: 10px;
+            position: absolute;
+            /* Đặt vị trí tuyệt đối dựa vào nút menu */
+            top: 100%;
+            /* Đặt ngay bên dưới nút 3 gạch */
+            right: 0;
+            /* Căn lề phải theo nút 3 gạch */
             background: white;
             border: 1px solid #ccc;
             border-radius: 5px;
             padding: 10px;
             display: none;
             max-height: 300px;
-            width: 200px;
+            width: 250px;
+            /* Điều chỉnh độ rộng theo ý bạn */
             overflow-y: auto;
             box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
             z-index: 9999;
-            /* Tăng z-index cao hơn bảng điểm */
+            /* Đảm bảo nằm trên bảng điểm */
         }
 
+
+
         #scoreDisplay {
-            z-index: 1000;
-            /* Đảm bảo nhỏ hơn history-menu */
+            display: flex;
+            align-items: center;
+            /* Căn giữa theo chiều dọc */
+            justify-content: center;
+            /* Căn giữa nội dung */
+            padding: 5px 15px;
+            /* Khoảng cách đều giữa nội dung */
+            min-width: 120px;
+            /* Đảm bảo đủ rộng */
+            height: 25px;
+            /* Đặt chiều cao cố định */
+            white-space: nowrap;
+            /* Ngăn nội dung xuống hàng */
+            flex-wrap: nowrap;
+            /* Đảm bảo nội dung luôn nằm trên một dòng */
+            overflow: hidden;
+            /* Ngăn chặn vỡ layout */
         }
+
+
 
 
         .history-item {
@@ -194,6 +216,20 @@
             color: white;
             font-weight: bold;
         }
+
+        .fixed-bottom {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            /* Để nền trắng, tránh bị che */
+            padding: 10px 0;
+            text-align: center;
+            /* Căn giữa nút */
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+            /* Tạo hiệu ứng nổi lên */
+        }
     </style>
 </head>
 
@@ -203,22 +239,25 @@
 
     <!-- <h1>Trắc nghiệm Bộ Thủ</h1> -->
     <!-- <button id="startBtn">Start</button> -->
+    <div class="fixed-bottom">
+        <div style="position: fixed; top: 10px; right: 10px;">
+            <button id="menuButton">☰</button>
+            <div class="history-menu" id="historyMenu"></div>
+        </div>
 
-    <div style="position: fixed; top: 10px; right: 10px;">
-        <button id="menuButton">☰</button>
-        <div class="history-menu" id="historyMenu"></div>
-    </div>
+        <div id="quizContainer" class="quiz-container" style="display: none;">
+            <div class="question" id="question"></div>
+            <div id="explanation" style="font-size: 20px; margin-top: 10px; font-style: italic; color: #555;"></div>
 
-    <div id="quizContainer" class="quiz-container" style="display: none;">
-        <div class="question" id="question"></div>
-        <div id="explanation" style="font-size: 20px; margin-top: 10px; font-style: italic; color: #555;"></div>
-
-        <div class="options-container" id="options"></div>
-        <div>
-            <button class="navBtn" id="prevBtn" disabled>&lt; Trước</button>
-            <button class="navBtn" id="nextBtn" disabled>Tiếp &gt;</button>
+            <div class="options-container" id="options"></div>
+            <div>
+                <button class="navBtn" id="prevBtn" disabled>&lt; Trước</button>
+                <button class="navBtn" id="nextBtn" disabled>Tiếp &gt;</button>
+            </div>
         </div>
     </div>
+
+
 
     <script>
         let bothuData = [];
@@ -226,6 +265,15 @@
         let currentIndex = -1;
         let mode = 1; // Mặc định là chế độ 1
         let score = 0; // Thêm biến để lưu điểm
+        let menuButton = document.getElementById("menuButton");
+        let scoreElement = document.getElementById("scoreDisplay");
+
+        if (menuButton && scoreElement) {
+            let menuHeight = menuButton.offsetHeight; // Lấy chiều cao của nút menu
+            scoreElement.style.height = menuHeight + "px"; // Cập nhật chiều cao bảng điểm
+            scoreElement.style.lineHeight = menuHeight + "px"; // Căn giữa nội dung theo chiều dọc
+        }
+
 
         async function loadBothuData() {
             const response = await fetch("bothu.json");
@@ -270,10 +318,11 @@
         // Hiển thị điểm số
         function updateScoreDisplay() {
             let scoreElement = document.getElementById("scoreDisplay");
+
             if (!scoreElement) {
                 scoreElement = document.createElement("div");
                 scoreElement.id = "scoreDisplay";
-                scoreElement.style.position = "fixed";
+                scoreElement.style.position = "absolute";
                 scoreElement.style.top = "10px";
                 scoreElement.style.left = "50%";
                 scoreElement.style.transform = "translateX(-50%)";
@@ -281,7 +330,7 @@
                 scoreElement.style.padding = "10px";
                 scoreElement.style.border = "1px solid #000";
                 scoreElement.style.fontSize = "20px";
-                scoreElement.style.zIndex = "1000";
+                // scoreElement.style.zIndex = "999";
                 document.body.appendChild(scoreElement);
             }
 
@@ -348,11 +397,7 @@
             }
         });
 
-        document.getElementById("menuButton").addEventListener("click", () => {
-            let menu = document.getElementById("historyMenu");
-            menu.style.display = (menu.style.display === "block") ? "none" : "block";
-            // updateHistoryMenu();  // Cập nhật danh sách lịch sử
-        });
+
 
 
 
@@ -505,12 +550,25 @@
                 item.onclick = () => {
                     currentIndex = index;
                     loadQuestion(index);
-                    document.getElementById("historyMenu").style.display = "none"; // Đóng menu sau khi chọn
                 };
 
                 menu.appendChild(item);
             });
         }
+        document.getElementById("menuButton").addEventListener("click", function () {
+            let menu = document.getElementById("historyMenu");
+            let menuButton = document.getElementById("menuButton");
+
+            if (menu.style.display === "none" || menu.style.display === "") {
+                let rect = menuButton.getBoundingClientRect(); // Lấy vị trí của nút menu
+                menu.style.top = rect.bottom + "px"; // Đặt menu ngay dưới nút
+                menu.style.right = (window.innerWidth - rect.right) + "px"; // Căn lề phải theo nút
+                menu.style.display = "block";
+            } else {
+                menu.style.display = "none";
+            }
+        });
+
     </script>
 
 </body>
