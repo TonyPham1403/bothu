@@ -560,7 +560,8 @@
             history.forEach((entry, index) => {
                 let item = document.createElement("div");
                 item.className = "history-item";
-                item.innerText = `Câu ${index + 1}: Bộ ${entry.question.bo_thu}`;
+                // item.innerText = `Câu ${index + 1}: Bộ ${entry.question.bo_thu}`;
+                item.innerText = `${entry.question.bo_thu}`;
 
                 if (!entry.correct && entry.firstAttempt) {
                     entry.markWrongFirstAttempt = true;
