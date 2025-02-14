@@ -202,9 +202,6 @@
         <button id="menuButton">☰</button>
         <div class="history-menu" id="historyMenu"></div>
     </div>
-    <div id="scoreContainer" style="font-size: 20px; font-weight: bold; margin-bottom: 10px;">
-        Điểm: <span id="score">0</span>
-    </div>
 
     <div id="quizContainer" class="quiz-container" style="display: none;">
         <div class="question" id="question"></div>
@@ -264,14 +261,6 @@
         }
 
 
-
-
-
-
-
-
-
-
         // Hiển thị điểm số
         function updateScoreDisplay() {
             let scoreElement = document.getElementById("scoreDisplay");
@@ -292,14 +281,11 @@
             // Đếm số câu đã trả lời ít nhất 1 lần
             let totalAnswered = history.filter(q => q.firstAttempt !== undefined).length;
 
-            // Hiển thị dạng Điểm: X/Y
-            scoreElement.innerText = `Điểm: ${score}/${totalAnswered}`;
+            // Tính phần trăm điểm
+            let percentage = totalAnswered > 0 ? ((score / totalAnswered) * 100).toFixed(2) : 0;
+            // Hiển thị dạng "Điểm: X/Y (Z%)"
+            scoreElement.innerText = `Điểm: ${score}/${totalAnswered} (${percentage}%)`;
         }
-
-
-
-
-
 
 
         // Hàm vô hiệu hóa tất cả các nút lựa chọn
@@ -515,9 +501,6 @@
                 menu.appendChild(item);
             });
         }
-
-
-
     </script>
 
 </body>
