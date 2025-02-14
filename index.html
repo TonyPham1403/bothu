@@ -192,8 +192,8 @@
 </head>
 
 <body>
-    <button id="mode1Btn">Chế độ 1</button>
-    <button id="mode2Btn">Chế độ 2</button>
+    <button id="mode1Btn">Number to Radical</button>
+    <button id="mode2Btn">Radical to Number</button>
 
     <!-- <h1>Trắc nghiệm Bộ Thủ</h1> -->
     <!-- <button id="startBtn">Start</button> -->
@@ -449,7 +449,10 @@
             // Tô màu nút vừa chọn
             if (isCorrect) {
                 selectedButton.classList.add("correct");
-
+                // Hiển thị giải thích
+                let explanationText = `${questionData.question.y_nghia}`;
+                document.getElementById("explanation").innerText = explanationText;
+                questionData.explanation = explanationText; // Lưu giải thích vào history
                 // Vô hiệu hóa tất cả nút khác
                 document.querySelectorAll(".option").forEach(btn => {
                     btn.disabled = true;
