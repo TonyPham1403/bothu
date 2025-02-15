@@ -319,10 +319,23 @@
             let begin = parseInt(document.getElementById("begin").value, 10);
             let end = parseInt(document.getElementById("end").value, 10);
 
-            // Giới hạn khoảng hợp lệ
+            // Ensure range is within valid limits
             begin = Math.max(1, Math.min(214, begin));
             end = Math.max(1, Math.min(214, end));
             if (begin > end) [begin, end] = [end, begin];
+
+            // Ensure at least 4 elements in the range
+            if (end - begin + 1 < 4) {
+                let needed = 4 - (end - begin + 1);
+
+                // Try extending the end first
+                end = Math.min(214, end + needed);
+
+                // If still not enough, adjust begin
+                if (end - begin + 1 < 4) {
+                    begin = Math.max(1, begin - (4 - (end - begin + 1)));
+                }
+            }
 
             if (allBothuData.length === 0) {
                 const response = await fetch("bothu.json");
@@ -330,9 +343,8 @@
             }
 
             bothuData = allBothuData.slice(begin - 1, end);
-            document.getElementById("result").innerText = `Đã tải ${bothuData.length} bộ thủ từ ${begin} đến ${end}`;
+            document.getElementById("result").innerText = `Loaded ${bothuData.length} radicals from ${begin} to ${end}`;
         }
-
         // Khi chọn chế độ, tự động nạp dữ liệu và ẩn ô nhập
         function setMode(mode) {
             currentMode = mode;
