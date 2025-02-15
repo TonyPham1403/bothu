@@ -286,14 +286,20 @@
 
         <div id="quizContainer" class="quiz-container" style="display: none;">
             <div class="question" id="question"></div>
-            <div id="explanation" style="font-size: 20px; margin-top: 10px; font-style: italic; color: #555;"></div>
 
             <div class="options-container" id="options"></div>
+
+            <!-- Giữ chiều cao cố định cho phần explanation -->
+            <div id="explanation" style="font-size: 20px; font-style: italic; color: #555; 
+                min-height: 50px; margin-top: 10px;">
+            </div>
+
             <div>
                 <button class="navBtn" id="prevBtn" disabled>&lt; Trước</button>
                 <button class="navBtn" id="nextBtn" disabled>Tiếp &gt;</button>
             </div>
         </div>
+
     </div>
 
 
@@ -345,6 +351,8 @@
             bothuData = allBothuData.slice(begin - 1, end);
             document.getElementById("result").innerText = `Loaded ${bothuData.length} radicals from ${begin} to ${end}`;
         }
+
+
         // Khi chọn chế độ, tự động nạp dữ liệu và ẩn ô nhập
         function setMode(mode) {
             currentMode = mode;
@@ -536,7 +544,6 @@
                 document.getElementById("question").innerText = questionData.question.y_nghia;
             }
 
-            document.getElementById("explanation").innerText = questionData.correct ? questionData.explanation : "";
 
             questionData.options.forEach(option => {
                 let button = document.createElement("button");
@@ -566,6 +573,7 @@
                     button.onclick = () => checkAnswer(button, mode === 1 ? option.bo_thu : mode === 2 ? option.stt : mode === 3 ? option.y_nghia : option.bo_thu);
                 }
             });
+            document.getElementById("explanation").innerText = questionData.correct ? questionData.explanation : "";
 
             document.getElementById("prevBtn").disabled = currentIndex <= 0;
             document.getElementById("nextBtn").disabled = currentIndex >= history.length - 1;
@@ -605,7 +613,6 @@
             if (isCorrect) {
                 selectedButton.classList.add("correct");
                 let explanationText = `${questionData.question.y_nghia}`;
-                document.getElementById("explanation").innerText = explanationText;
                 questionData.explanation = explanationText;
 
                 document.querySelectorAll(".option").forEach(btn => {
@@ -615,11 +622,12 @@
                         btn.classList.add("correct");
                     }
                 });
+                document.getElementById("explanation").innerText = explanationText;
 
                 updateScoreDisplay();
                 setTimeout(() => {
                     loadQuestion();
-                }, 600);
+                }, 450);
             } else {
                 selectedButton.classList.add("wrong");
             }
