@@ -260,10 +260,21 @@
 </head>
 
 <body>
-    <button id="mode1Btn">Number to Radical</button>
-    <button id="mode2Btn">Radical to Number</button>
-    <button id="mode3Btn">Radical to Meaning</button>
-    <button id="mode4Btn">Meaning to Radical</button>
+    <div id="inputContainer">
+        <label for="begin">begin(>=1): </label>
+        <input type="number" id="begin" min="1" max="214" value="1">
+
+        <label for="end">end(<=214): </label>
+                <input type="number" id="end" min="1" max="214" value="214">
+    </div>
+
+    <p id="result"></p>
+
+    <button id="mode1Btn" onclick="setMode(1)">Number to Radical</button>
+    <button id="mode2Btn" onclick="setMode(2)">Radical to Number</button>
+    <button id="mode3Btn" onclick="setMode(3)">Radical to Meaning</button>
+    <button id="mode4Btn" onclick="setMode(4)">Meaning to Radical</button>
+
 
     <div style="position: fixed; top: 10px; right: 10px;">
         <button id="menuButton">☰</button>
@@ -295,6 +306,7 @@
         let score = 0; // Thêm biến để lưu điểm
         let menuButton = document.getElementById("menuButton");
         let scoreElement = document.getElementById("scoreDisplay");
+        let allBothuData = []; // Mảng chứa toàn bộ dữ liệu gốc
 
         if (menuButton && scoreElement) {
             let menuHeight = menuButton.offsetHeight; // Lấy chiều cao của nút menu
@@ -304,8 +316,28 @@
 
 
         async function loadBothuData() {
-            const response = await fetch("bothu.json");
-            bothuData = await response.json();
+            let begin = parseInt(document.getElementById("begin").value, 10);
+            let end = parseInt(document.getElementById("end").value, 10);
+
+            // Giới hạn khoảng hợp lệ
+            begin = Math.max(1, Math.min(214, begin));
+            end = Math.max(1, Math.min(214, end));
+            if (begin > end) [begin, end] = [end, begin];
+
+            if (allBothuData.length === 0) {
+                const response = await fetch("bothu.json");
+                allBothuData = await response.json();
+            }
+
+            bothuData = allBothuData.slice(begin - 1, end);
+            document.getElementById("result").innerText = `Đã tải ${bothuData.length} bộ thủ từ ${begin} đến ${end}`;
+        }
+
+        // Khi chọn chế độ, tự động nạp dữ liệu và ẩn ô nhập
+        function setMode(mode) {
+            currentMode = mode;
+            loadBothuData(); // Gọi hàm nạp dữ liệu
+            document.getElementById("inputContainer").style.display = "none"; // Ẩn ô nhập
         }
 
         function getRandomQuestion() {
