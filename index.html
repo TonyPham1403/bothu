@@ -612,7 +612,7 @@
 
             if (isCorrect) {
                 selectedButton.classList.add("correct");
-                let explanationText = `${questionData.question.y_nghia}`;
+                let explanationText = `/${questionData.question.phien_am}/ ${questionData.question.y_nghia}`;
                 questionData.explanation = explanationText;
 
                 document.querySelectorAll(".option").forEach(btn => {
